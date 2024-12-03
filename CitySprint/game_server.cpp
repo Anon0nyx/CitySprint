@@ -302,12 +302,12 @@ void initializeMaps()
 {
   // SETUP OUR MAPS
   // Troops
-  troopMap["Barbarian"] = {
+  troopMap["barbarian"] = {
     0, // id
     {0, 0}, // midpoint
     6, // size
-    10, // defense
-    10, // attack
+    1, // defense
+    1, // attack
     {}, // collidingEntities
     "red", // color
     1, // movement
@@ -316,18 +316,45 @@ void initializeMaps()
     5 // foodCost
   };
 
+  troopMap["giant"] = {
+    0,
+    {0 ,0},
+    12, // size
+    10, // defense
+    2, // attack
+    {}, // collidingEntities
+    "green", // color
+    1, // movement
+    1, // attackDistance
+    30, // cost
+    10 // foodCost
+  };
+
   // Buildings
-  buildingMap["coinFarm"] = {
+  buildingMap["coin farm"] = {
     0, // id
     {0, 0}, // midpoint
     10, // size
-    30, // defense
-    10, // attack
+    3, // defense
+    1, // attack
     {}, // collidingEntities
     "purple", // color
     50, // cost
-    5, // food
+    0, // food
     1 // coins
+  };
+
+  buildingMap["food farm"] = {
+    0,
+    {0, 0},
+    15,
+    2,
+    1,
+    {},
+    "orange",
+    10,
+    2,
+    0
   };
   return;
 }
@@ -1037,8 +1064,8 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
       newCity.id = generateUniqueId(); // Generate a unique ID for the city
       newCity.midpoint = { coords[0], coords[1] };
       newCity.size = 20;
-      newCity.defense = 100;
-      newCity.attack = 10;
+      newCity.defense = 10;
+      newCity.attack = 1;
       newCity.color = "yellow";
       player.cities[0] = newCity;
       player.phase = 1;
@@ -1099,19 +1126,19 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
       nearestCity->coins++;
       log(std::to_string(player.coins) + " coins collected. City now has " + std::to_string(nearestCity->coins) + " coins.");
     }
-  } else if (characterType == "troop") {
-    if (player.coins < troopMap["Barbarian"].cost) {
+  } else if (troopMap.find(characterType) != troopMap.end()) {
+    if (player.coins < troopMap[characterType].cost) {
       log("Not enough coins to create troop.");
       return;
     }
-    if (!insertCharacter(coords, troopMap["Barbarian"].size, troopMap["Barbarian"].color)) {
+    if (!insertCharacter(coords, troopMap[characterType].size, troopMap[characterType].color)) {
       log("Failed to insert troop character.");
       return;
     }
-    player.coins -= troopMap["Barbarian"].cost;
+    player.coins -= troopMap[characterType].cost;
     log("Troop created. Player now has " + std::to_string(player.coins) + " coins left.");
 
-    Troop newTroop = troopMap["Barbarian"];
+    Troop newTroop = troopMap[characterType];
     newTroop.id = generateUniqueId(); // Assign a unique ID to the new troop
     newTroop.midpoint = { coords[0], coords[1] };
     City* nearestCity = nullptr;
@@ -1129,19 +1156,19 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
     if (nearestCity) {
       nearestCity->troops.push_back(newTroop);
     }
-  } else if (characterType == "building") {
-    if (player.coins < buildingMap["coinFarm"].cost) {
+  } else if (buildingMap.find(characterType) != buildingMap.end()) {
+    if (player.coins < buildingMap[characterType].cost) {
       log("Not enough coins to create building.");
       return;
     }
-    if (!insertCharacter(coords, buildingMap["coinFarm"].size, buildingMap["coinFarm"].color)) {
+    if (!insertCharacter(coords, buildingMap[characterType].size, buildingMap[characterType].color)) {
       log("Failed to insert building character.");
       return;
     }
-    player.coins -= buildingMap["coinFarm"].cost;
+    player.coins -= buildingMap[characterType].cost;
     log("Building created. Player now has " + std::to_string(player.coins) + " coins left.");
 
-    Building newBuilding = buildingMap["coinFarm"];
+    Building newBuilding = buildingMap[characterType];
     newBuilding.id = generateUniqueId(); // Assign a unique ID to the new building
     newBuilding.midpoint = { coords[0], coords[1] };
     City* nearestCity = nullptr;

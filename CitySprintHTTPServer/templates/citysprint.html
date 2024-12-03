@@ -1,75 +1,87 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>City Sprint</title>
-    <link rel="stylesheet" href="./src/style/style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>City Sprint</title>
+  <link rel="stylesheet" href="./src/style/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <h1>City Sprint</h1>
-        <p>It's definitely a skill issue</p>
-    </header>
-    <nav>
-        <div class="nav-right">
-            <div class="dropdown">
-                <button class="dropbtn">Game Info</button>
-                <div class="dropdown-content">
-                    <h2>About the Game</h2>
-                    <p>City Sprint is a strategic game where you build your empire, manage resources, and conquer territories.</p>
-                    <h2>Instructions</h2>
-                    <p>Use the buttons to select troops, buildings, or coins. Click on the game board to place your selected item.</p>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Player Stats</button>
-                <div class="dropdown-content">
-                    <p><strong>Score:</strong> 1200</p>
-                    <p><strong>Level:</strong> 5</p>
-                    <p><strong>Resources:</strong> 300 coins, 100 food</p>
-                    <div class="progress-bar-container">
-                        <p><strong>Experience:</strong></p>
-                        <div class="progress-bar">
-                            <div class="progress-bar-fill" style="width: 75%;"></div> <!-- Example percentage -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="dropdown">
-                <button class="dropbtn">Leaderboard</button>
-                <div class="dropdown-content">
-                    <h2>Leaderboard</h2>
-                    <ul>
-                        <li>Player1 - 1500 pts</li>
-                        <li>Player2 - 1300 pts</li>
-                        <li>Player3 - 1100 pts</li>
-                    </ul>
-                </div>
-            </div>
+  <header>
+    <h1>City Sprint</h1>
+    <p>It's definitely a skill issue</p>
+  </header>
+  <nav>
+    <div class="nav-right">
+      <div class="dropdown">
+        <button class="dropbtn">Game Info</button>
+        <div class="dropdown-content">
+          <h2>About the Game</h2>
+          <p>City Sprint is a strategic game where you build your empire, manage resources, and conquer territories.</p>
+          <h2>Instructions</h2>
+          <p>Use the buttons to select troops, buildings, or coins. Click on the game board to place your selected item.</p>
         </div>
-        </nav>
-        <div class="main-content">
-        <aside class="sidebar left-sidebar">
-            <div class="button-group">
-                <button id="coinButton" onclick="setCharacterType(this)">Coin</button>
-                <button id="troopButton" onclick="setCharacterType(this)">Troop</button>
-                <button id="buildingButton" onclick="setCharacterType(this)">Building</button>
-                <button id="cityButton" onclick="setCharacterType(this)">City</button>
-                <button id="selectButton" onclick="setCharacterType(this)">Select</button>
-                <ul id="dynamic-list">
-                </ul>
+      </div>
+      <div class="dropdown">
+        <button class="dropbtn">Player Stats</button>
+        <div class="dropdown-content">
+          <p><strong>Score:</strong> 1200</p>
+          <p><strong>Level:</strong> 5</p>
+          <p><strong>Resources:</strong> 300 coins, 100 food</p>
+          <div class="progress-bar-container">
+            <p><strong>Experience:</strong></p>
+            <div class="progress-bar">
+              <div class="progress-bar-fill" style="width: 75%;"></div> <!-- Example percentage -->
             </div>
-        </aside>
-        <div class="canvas-wrapper">
-            <canvas id="gameCanvas" width="1500" height="600"></canvas>
+          </div>
         </div>
+      </div>
+      <div class="dropdown">
+        <button class="dropbtn">Leaderboard</button>
+        <div class="dropdown-content">
+          <h2>Leaderboard</h2>
+          <ul>
+            <li>Player1 - 1500 pts</li>
+            <li>Player2 - 1300 pts</li>
+            <li>Player3 - 1100 pts</li>
+          </ul>
+        </div>
+      </div>
     </div>
-    <footer>
-        City Sprint © 2024
-    </footer>
-    <script src="./src/js/app.js"></script>
-    <script src="./src/js/citysprint.js"></script>
+  </nav>
+  <div class="main-content">
+    <aside class="sidebar left-sidebar">
+      <div class="button-group">
+        <button id="coinButton" onclick="setCharacterType(this)">Coin</button>
+        <div class="dropdown">
+          <button class="dropbtn">Troops</button>
+          <div class="dropdown-content">
+            <button id="barbarianButton" onclick="setCharacterType(this)">Barbarian</button>
+            <button id="archerButton" onclick="setCharacterType(this)">Giant</button>
+          </div>
+        </div>
+        <div class="dropdown">
+          <button class="dropbtn">Buildings</button>
+          <div class="dropdown-content">
+            <button id="coinFarmButton" onclick="setCharacterType(this)">Coin Farm</button>
+            <button id="barracksButton" onclick="setCharacterType(this)">Food Farm</button>
+          </div>
+        </div>
+        <button id="cityButton" onclick="setCharacterType(this)">City</button>
+        <button id="selectButton" onclick="setCharacterType(this)">Select</button>
+        <ul id="dynamic-list">
+        </ul>
+      </div>
+    </aside>
+    <div class="canvas-wrapper">
+      <canvas id="gameCanvas" width="1500" height="600"></canvas>
+    </div>
+  </div>
+  <footer>
+    City Sprint © 2024
+  </footer>
+  <script src="./src/js/app.js"></script>
+  <script src="./src/js/citysprint.js"></script>
 </body>
 </html>

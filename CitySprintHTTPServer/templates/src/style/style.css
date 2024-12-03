@@ -1,80 +1,112 @@
 /* General settings */
 body {
-    font-family: 'Press Start 2P', cursive;
-    background-color: #2c3e50; /* Dark Blue */
-    color: #ecf0f1; /* Light Gray */
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+  font-family: 'Press Start 2P', cursive;
+  background-color: #2c3e50; /* Dark Blue */
+  color: #ecf0f1; /* Light Gray */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* Header */
 header {
-    width: 100%;
-    background-color: #1c2833; /* Darker Blue */
-    color: #d4ac0d; /* Gold */
-    text-align: center;
-    padding: 20px 0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-bottom: 3px solid #d4ac0d; /* Gold */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    border-radius: 10px 10px 0 0; /* Rounded corners at the top */
+  width: 100%;
+  background-color: #1c2833; /* Darker Blue */
+  color: #d4ac0d; /* Gold */
+  text-align: center;
+  padding: 20px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 3px solid #d4ac0d; /* Gold */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 10px 10px 0 0; /* Rounded corners at the top */
 }
 
-    header h1 {
-        margin: 0;
-    }
+  header h1 {
+    margin: 0;
+  }
 
-    header p {
-        margin: 5px 0 0;
-        font-size: 1.1em;
-    }
+  header p {
+    margin: 5px 0 0;
+    font-size: 1.1em;
+  }
 
 /* Navigation bar */
 nav {
-    width: 100%;
-    background-color: #1c2833; /* Darker Blue */
-    color: #d4ac0d; /* Gold */
-    display: flex;
-    justify-content: flex-end;
-    padding: 10px 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 10px 10px; /* Rounded corners at the bottom */
+  width: 100%;
+  background-color: #1c2833; /* Darker Blue */
+  color: #d4ac0d; /* Gold */
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 10px 10px; /* Rounded corners at the bottom */
 }
 
 .nav-right {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 nav button {
-    background-color: #2c3e50; /* Dark Blue */
-    color: #d4ac0d; /* Gold */
-    border: 2px solid #d4ac0d; /* Gold */
-    border-radius: 10px; /* Rounded corners */
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-    font-size: 0.8em;
-    margin: 0 5px;
+  background-color: #2c3e50; /* Dark Blue */
+  color: #d4ac0d; /* Gold */
+  border: 2px solid #d4ac0d; /* Gold */
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  font-size: 0.8em;
+  margin: 0 5px;
 }
 
-    nav button:hover {
-        background-color: #d4ac0d; /* Gold */
-        color: #1c2833; /* Darker Blue */
-    }
+  nav button:hover {
+    background-color: #d4ac0d; /* Gold */
+    color: #1c2833; /* Darker Blue */
+  }
 
 /* Dropdown menu */
+/* Dropdown menu */
 .dropdown {
-    position: relative;
-    display: inline-block;
+  position: relative;
+  display: inline-block;
 }
 
 .dropbtn {
+  background-color: #2c3e50; /* Dark Blue */
+  color: #d4ac0d; /* Gold */
+  border: 2px solid #d4ac0d; /* Gold */
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  font-size: 0.8em;
+  margin: 0 5px;
+  width: 100%; /* Ensure the dropdown buttons are the same width as other buttons */
+}
+
+  .dropbtn:hover {
+    background-color: #d4ac0d; /* Gold */
+    color: #1c2833; /* Darker Blue */
+  }
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #1c2833; /* Darker Blue */
+  min-width: 200px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1;
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px;
+  left: 0; /* Align dropdowns to the right */
+  width: 100%; /* Ensure the dropdown content is the same width as the parent button */
+}
+
+  .dropdown-content button {
     background-color: #2c3e50; /* Dark Blue */
     color: #d4ac0d; /* Gold */
     border: 2px solid #d4ac0d; /* Gold */
@@ -83,167 +115,138 @@ nav button {
     cursor: pointer;
     transition: background-color 0.3s, color 0.3s;
     font-size: 0.8em;
-    margin: 0 5px;
-}
+    margin: 5px 0;
+    width: 100%; /* Ensure the dropdown buttons are the same width as other buttons */
+  }
 
-    .dropbtn:hover {
-        background-color: #d4ac0d; /* Gold */
-        color: #1c2833; /* Darker Blue */
-    }
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #1c2833; /* Darker Blue */
-    min-width: 200px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    z-index: 1;
-    border-radius: 10px; /* Rounded corners */
-    padding: 10px;
-    right: 0; /* Align dropdowns to the right */
-}
-
-    .dropdown-content h2, .dropdown-content p, .dropdown-content ul {
-        color: #ecf0f1; /* Light Gray */
-        margin: 10px 0;
-    }
-
-    .dropdown-content ul {
-        list-style-type: none;
-        padding: 0;
-    }
-
-    .dropdown-content li {
-        background-color: #2c3e50; /* Dark Blue */
-        color: #d4ac0d; /* Gold */
-        margin: 5px 0;
-        padding: 10px;
-        border-radius: 10px; /* Rounded corners */
+    .dropdown-content button:hover {
+      background-color: #d4ac0d; /* Gold */
+      color: #1c2833; /* Darker Blue */
     }
 
 .dropdown:hover .dropdown-content {
-    display: block;
+  display: block;
 }
+
 
 /* Main content area */
 .main-content {
-    display: flex;
-    flex-grow: 1;
-    padding: 20px;
+  display: flex;
+  flex-grow: 1;
+  padding: 20px;
 }
 
 /* Sidebar */
 .sidebar {
-    width: 250px;
-    background-color: #34495e; /* Darker Blue */
-    padding: 20px;
-    border-radius: 10px; /* Rounded corners */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    margin-right: 20px;
+  width: 250px;
+  background-color: #34495e; /* Darker Blue */
+  padding: 20px;
+  border-radius: 10px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  margin-right: 20px;
 }
 
 .left-sidebar {
-    margin-right: 20px;
+  margin-right: 20px;
 }
 
 .right-sidebar {
-    margin-left: 20px;
+  margin-left: 20px;
 }
 
 .sidebar h2 {
-    margin-top: 0;
+  margin-top: 0;
 }
 
 .sidebar p, .sidebar ul {
-    margin: 10px 0;
+  margin: 10px 0;
 }
 
 .sidebar ul {
-    list-style-type: none;
-    padding: 0;
+  list-style-type: none;
+  padding: 0;
 }
 
 .sidebar li {
-    background-color: #2c3e50; /* Dark Blue */
-    color: #d4ac0d; /* Gold */
-    margin: 5px 0;
-    padding: 10px;
-    border-radius: 10px; /* Rounded corners */
+  background-color: #2c3e50; /* Dark Blue */
+  color: #d4ac0d; /* Gold */
+  margin: 5px 0;
+  padding: 10px;
+  border-radius: 10px; /* Rounded corners */
 }
 
 .sidebar .button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .sidebar button {
-    background-color: #2c3e50; /* Dark Blue */
-    color: #d4ac0d; /* Gold */
-    border: 2px solid #d4ac0d; /* Gold */
-    border-radius: 10px; /* Rounded corners */
-    padding: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-    font-size: 0.8em;
+  background-color: #2c3e50; /* Dark Blue */
+  color: #d4ac0d; /* Gold */
+  border: 2px solid #d4ac0d; /* Gold */
+  border-radius: 10px; /* Rounded corners */
+  padding: 10px;
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+  font-size: 0.8em;
 }
 
-    .sidebar button:hover {
-        background-color: #d4ac0d; /* Gold */
-        color: #1c2833; /* Darker Blue */
-    }
+  .sidebar button:hover {
+    background-color: #d4ac0d; /* Gold */
+    color: #1c2833; /* Darker Blue */
+  }
 
 /* Game area */
 .canvas-wrapper {
-    flex-grow: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-    background-color: #1c2833; /* Darker Blue */
-    border: 3px solid #d4ac0d; /* Gold */
-    border-radius: 10px; /* Rounded corners */
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #1c2833; /* Darker Blue */
+  border: 3px solid #d4ac0d; /* Gold */
+  border-radius: 10px; /* Rounded corners */
 }
 
 canvas {
-    border: 2px solid #d4ac0d; /* Gold */
-    background-color: #2c3e50; /* Dark Blue */
-    height: 600px;
-    width: 1500px;
-    border-radius: 10px; /* Rounded corners */
+  border: 2px solid #d4ac0d; /* Gold */
+  background-color: #2c3e50; /* Dark Blue */
+  height: 600px;
+  width: 1500px;
+  border-radius: 10px; /* Rounded corners */
 }
 
 /* Progress bar */
 .progress-bar-container {
-    margin: 10px 0;
+  margin: 10px 0;
 }
 
 .progress-bar {
-    height: 20px;
-    background-color: #1c2833; /* Darker Blue */
-    border-radius: 10px; /* Rounded corners */
-    overflow: hidden;
+  height: 20px;
+  background-color: #1c2833; /* Darker Blue */
+  border-radius: 10px; /* Rounded corners */
+  overflow: hidden;
 }
 
 .progress-bar-fill {
-    height: 100%;
-    background-color: #d4ac0d; /* Gold */
-    width: 75%; /* Example progress */
-    border-radius: 10px; /* Rounded corners */
+  height: 100%;
+  background-color: #d4ac0d; /* Gold */
+  width: 75%; /* Example progress */
+  border-radius: 10px; /* Rounded corners */
 }
 
 /* Footer */
 footer {
-    width: 100%;
-    background-color: #1c2833; /* Darker Blue */
-    color: #d4ac0d; /* Gold */
-    text-align: center;
-    padding: 10px 0;
-    border-top: 3px solid #d4ac0d; /* Gold */
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 0 0 10px 10px; /* Rounded corners at the bottom */
+  width: 100%;
+  background-color: #1c2833; /* Darker Blue */
+  color: #d4ac0d; /* Gold */
+  text-align: center;
+  padding: 10px 0;
+  border-top: 3px solid #d4ac0d; /* Gold */
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 0 0 10px 10px; /* Rounded corners at the bottom */
 }
-

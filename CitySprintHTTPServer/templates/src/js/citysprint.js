@@ -13,7 +13,6 @@ var PlayerState = {
   cities: []
 };
 
-
 const fullscrBtn = document.getElementById('fullscreenBtn');
 
 const ws = new WebSocket("ws://localhost:9001"); // For Development
@@ -154,7 +153,7 @@ const list = document.getElementById('dynamic-list');
 function updateList(character) {
   if (obj.player == null) return;
   const items = [obj.player.coins, character];
-      
+
   list.innerHTML = ''; // clear list
 
   const coinsItem = document.createElement('li');
@@ -177,3 +176,4 @@ function initializeGameMatrix() {
 
 // Call this function to start the game
 initializeGameMatrix();
+
