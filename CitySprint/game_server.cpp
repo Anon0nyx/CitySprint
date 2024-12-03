@@ -117,7 +117,7 @@ private:
 
 ThreadPool::ThreadPool(size_t numThreads) : stop(false) 
 {
-  std::cout << "Initializing Thread Pool with: " << std::to_string(numThreads) << " Workers." << std::endl;
+  std::cout << "Initializing Thread Pool with: " << std::to_string(numThreads) << " Worker Threads." << std::endl;
   for (size_t i = 0; i < numThreads; ++i) {
     workers.emplace_back([this] {
       for (;;) {
@@ -1382,7 +1382,7 @@ void boardLoop()
 int main()
 {
   initializeMaps();
-  int threadsUsed = clientMessageCount + clientSubtaskCount;
+  int threadsUsed = clientMessageCount + clientSubtaskCount + leftoverThreadCount;
   log("Allocating " + std::to_string(threadsUsed) + " of the CPUs " + std::to_string(std::thread::hardware_concurrency()) + " Available Concurrent Threads.");
 
   // NETWORK CONFIG
