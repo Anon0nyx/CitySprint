@@ -34,6 +34,8 @@
 #include <queue>
 #include <functional>
 #include <condition_variable>
+#include <vector>
+#include <algorithm>
 
 #include "utilities.h"
 #include "logger.h"
@@ -642,7 +644,7 @@ void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entit
   }
 
   log("Our player: " + std::to_string(ourPlayer->socket));
-
+ 
   log("Applying damage for moving entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ")");
 
   for (auto& playerPair : gameState.playerStates) {
@@ -654,13 +656,13 @@ void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entit
     }
     for (auto& city : player.cities) {
       log("Testing against city: " + std::to_string(city.id) + " with size: " + std::to_string(city.size));
-      log("Entity size: " + std::to_string(entity->size));
+      log("Entity size: " + std::to_string(entity->size) + " Health: " + std::to_string(entity->defense));
       int newRadius = entity->size + city.size + 4;
       if (isWithinRadius(city.midpoint, entity->midpoint, newRadius)) {
         int cityDamage = entity->attack;
         int movingEntityDamage = city.attack;
-        city.defense -= cityDamage;
-        entity->defense -= movingEntityDamage;
+        city.defense -= cityDamage; // Perform damage to city
+        entity->defense -= movingEntityDamage; // Perform damage to our entity
         entity->collidingEntities.push_back(city.id);
         city.collidingEntities.push_back(entity->id);
         log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(cityDamage) + " damage to City " + std::to_string(city.id) + " (Client: " + std::to_string(playerPair.first) + "). City defense: " + std::to_string(city.defense));
@@ -686,8 +688,8 @@ void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entit
           log("Troops are officially fighting");
           int troopDamage = entity->attack;
           int movingEntityDamage = troop.attack;
-          troop.defense -= troopDamage;
-          entity->defense -= movingEntityDamage;
+          troop.defense -= troopDamage; // Perform damage to troop
+          entity->defense -= movingEntityDamage; // Perform damage to our entity
           entity->collidingEntities.push_back(troop.id);
           troop.collidingEntities.push_back(entity->id);
           log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(troopDamage) + " damage to Troop " + std::to_string(troop.id) + " (Client: " + std::to_string(playerPair.first) + "). Troop defense: " + std::to_string(troop.defense));
@@ -716,8 +718,8 @@ void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entit
           log("building is officially fighting");
           int buildingDamage = entity->attack;
           int movingEntityDamage = building.attack;
-          building.defense -= buildingDamage;
-          entity->defense -= movingEntityDamage;
+          building.defense -= buildingDamage; // Perform damage to building
+          entity->defense -= movingEntityDamage; // Perform damage to our entity
           entity->collidingEntities.push_back(building.id);
           building.collidingEntities.push_back(entity->id);
           log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(movingEntityDamage) + " damage to Troop " + std::to_string(building.id) + " (Client: " + std::to_string(playerPair.first) + "). Building defense: " + std::to_string(building.defense));
