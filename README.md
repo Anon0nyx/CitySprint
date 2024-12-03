@@ -22,8 +22,7 @@
 We're actively working on:
 - **Enhancing server functionality for real-time updates.**
 - **Creating and refining City, Building, and Troop objects.**
-
-Stay tuned for more features and updates
+- **Improving game mechanics and user experience.**
 
 ## Contributing
 Contributions are welcome! Fork the repository and submit your ideas and enhancements via pull requests.
