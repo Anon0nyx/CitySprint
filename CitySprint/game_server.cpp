@@ -378,8 +378,8 @@ std::string serializeGameStateToString()
   std::string result;
   result += "{\"game\": { \"board\": \"";
   if (gameState.changedTiles.empty()) {
-    for (int y = 0; y < BOARD_HEIGHT / TILE_SIZE; y++) {
-      for (int x = 0; x < BOARD_WIDTH / TILE_SIZE; x++) {
+    for (int y = 0; y < BOARD_HEIGHT / TILE_SIZE; ++y) {
+      for (int x = 0; x < BOARD_WIDTH / TILE_SIZE; ++x) {
         result += std::to_string(x) + "," + std::to_string(y) + "," + gameState.board[y][x] + ";";
       }
     }
@@ -508,9 +508,9 @@ int insertCharacter(std::vector<int> coords, int radius, const std::string color
     changeGridPoint(centerX + y, centerY - x, color);
     changeGridPoint(centerX - y, centerY - x, color);
 
-    x++;
+    ++x;
     if (d > 0) {
-      y--;
+      --y;
       d = d + 4 * (x - y) + 10;
     } else {
       d = d + 4 * x + 6;
@@ -965,11 +965,11 @@ void moveTroopToPosition(SOCKET playerSocket, std::shared_ptr<Troop> troop, cons
   std::vector<int> currentCoords = troop->midpoint;
   std::vector<int> nextCoords = currentCoords;
 
-  if (currentCoords[0] < targetCoords[0]) nextCoords[0]++;
-  else if (currentCoords[0] > targetCoords[0]) nextCoords[0]--;
+  if (currentCoords[0] < targetCoords[0]) ++nextCoords[0];
+  else if (currentCoords[0] > targetCoords[0]) --nextCoords[0];
 
-  if (currentCoords[1] < targetCoords[1]) nextCoords[1]++;
-  else if (currentCoords[1] > targetCoords[1]) nextCoords[1]--;
+  if (currentCoords[1] < targetCoords[1]) ++nextCoords[1];
+  else if (currentCoords[1] > targetCoords[1]) --nextCoords[1];
 
   log("Attempting to move troop " + std::to_string(troop->id) + " (Client: " + std::to_string(playerSocket) + ") from (" + std::to_string(currentCoords[0]) + ", " + std::to_string(currentCoords[1]) + ") to (" + std::to_string(nextCoords[0]) + ", " + std::to_string(nextCoords[1]) + ")");
 
@@ -1121,8 +1121,8 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
       }
     }
     if (nearestCity && isWithinRadius(coords, nearestCity->midpoint, 20)) {
-      player.coins++;
-      nearestCity->coins++;
+      ++player.coins;
+      ++nearestCity->coins;
       log(std::to_string(player.coins) + " coins collected. City now has " + std::to_string(nearestCity->coins) + " coins.");
     }
   } else if (troopMap.find(characterType) != troopMap.end()) {
