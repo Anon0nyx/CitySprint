@@ -55,11 +55,11 @@ struct Tile {
 };
 
 struct CollidableEntity {
-  int id;
+  int id{};
   std::vector<int> midpoint;
-  int size;
-  int defense;
-  int attack;
+  int size{};
+  int defense{};
+  int attack{};
   std::vector<int> collidingEntities; // Vector to store IDs of colliding entities
   std::string color; // Add color to CollidableEntity
 };
@@ -106,57 +106,67 @@ public:
   ThreadPool(size_t numThreads);
   ~ThreadPool();
 
-  void enqueue(std::function<void()> task);
+  void enqueue(std::function<void()> task, int priority = 0);
 
 private:
+  struct Task {
+    int priority;
+    std::function<void()> func;
+
+    bool operator<(const Task& other) const {
+      return priority > other.priority; // Higher priority tasks have lower values
+    }
+  };
+
   std::vector<std::thread> workers;
-  std::queue<std::function<void()>> tasks;
+  std::priority_queue<Task> tasks;
 
   std::mutex queueMutex;
   std::condition_variable condition;
   bool stop;
 };
 
-ThreadPool::ThreadPool(size_t numThreads) : stop(false) 
+ThreadPool::ThreadPool(size_t numThreads) : stop(false)
 {
   std::cout << "Initializing Thread Pool with: " << std::to_string(numThreads) << " Worker Threads." << std::endl;
   for (size_t i = 0; i < numThreads; ++i) {
     workers.emplace_back([this] {
       for (;;) {
-        std::function<void()> task;
+        Task task;
 
         {
           std::unique_lock<std::mutex> lock(this->queueMutex);
           this->condition.wait(lock, [this] { return this->stop || !this->tasks.empty(); });
           if (this->stop && this->tasks.empty()) return;
-          task = std::move(this->tasks.front());
+          task = std::move(this->tasks.top());
           this->tasks.pop();
         }
 
-        task();
+        task.func();
       }
-    });
+      });
   }
 }
 
-ThreadPool::~ThreadPool() 
+ThreadPool::~ThreadPool()
 {
   {
     std::unique_lock<std::mutex> lock(queueMutex);
     stop = true;
   }
   condition.notify_all();
-  for (std::thread &worker : workers) worker.join();
+  for (std::thread& worker : workers) worker.join();
 }
 
-void ThreadPool::enqueue(std::function<void()> task) 
+void ThreadPool::enqueue(std::function<void()> task, int priority)
 {
   {
     std::unique_lock<std::mutex> lock(queueMutex);
-    tasks.push(std::move(task));
+    tasks.push({ priority, std::move(task) });
   }
   condition.notify_one();
 }
+
 
 class Semaphore {
 public:
@@ -979,14 +989,13 @@ void moveTroopToPosition(SOCKET playerSocket, std::shared_ptr<Troop> troop, cons
   // Log the updated midpoint after each move
   log("Troop " + std::to_string(troop->id) + " (Client: " + std::to_string(playerSocket) + ") moved to (" + std::to_string(troop->midpoint[0]) + ", " + std::to_string(troop->midpoint[1]) + ")");
 
-  // Enqueue the next step of the movement
+  // Enqueue the next step of the movement with a fixed delay
+  std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Fixed time step of 100ms
+
   subtaskThreadPool.enqueue([playerSocket, troop, targetCoords] {
     moveTroopToPosition(playerSocket, troop, targetCoords);
-  });
-
-  std::this_thread::sleep_for(std::chrono::milliseconds(50)); // Adjust the delay as needed
+    }, 1);
 }
-
 
 // Functionality for most of the networking stuff below here
 
@@ -1077,7 +1086,7 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
   if (characterType == "move" && player.selectedTroop) {
     subtaskThreadPool.enqueue([clientSocket, selectedTroop = player.selectedTroop, coords] {
       moveTroopToPosition(clientSocket, selectedTroop, coords);
-    });
+    }, 1);
     player.selectedTroop = nullptr; // Deselect the troop after starting the movement
     update_player_state(gameState, clientSocket, player);
     return;
@@ -1206,7 +1215,7 @@ void gameLogic(SOCKET clientSocket)
     // Submit the task to the thread pool
     clientMessageThreadPool.enqueue([clientSocket, decodedMessage] {
       handlePlayerMessage(clientSocket, decodedMessage);
-      });
+      }, 3);
   }
   closesocket(clientSocket);
   {
@@ -1362,7 +1371,7 @@ void boardLoop()
     if (hasEntitiesToProcess) {
       handleTroopCollisions();
     }
-    subtaskThreadPool.enqueue(updateCoinCounts);
+    subtaskThreadPool.enqueue(updateCoinCounts, 5);
     sendGameStateDeltasToClients();
     std::this_thread::sleep_for(std::chrono::milliseconds(16)); // Add a delay to avoid busy-waiting
   }
