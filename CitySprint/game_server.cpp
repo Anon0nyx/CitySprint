@@ -1257,6 +1257,7 @@ void handleWebSocketHandshake(SOCKET clientSocket, const std::string& request)
   int sendResult = send(clientSocket, frame.c_str(), static_cast<int>(frame.size()), 0);
   if (sendResult == SOCKET_ERROR) {
     log("Failed to send initial state to client: " + std::to_string(WSAGetLastError()));
+    return;
   } else {
     log("Initial game state sent to client.");
   }
@@ -1295,8 +1296,7 @@ void acceptPlayer(SOCKET serverSocket)
         // Release the semaphore slot when the game logic is done
         userSemaphore.release();
         }).detach();
-    }
-    else {
+    } else {
       log("Failed to receive handshake request: " + std::to_string(WSAGetLastError()));
       // Release the semaphore slot if handshake fails
       userSemaphore.release();

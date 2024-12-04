@@ -1,3 +1,79 @@
+// Structure to represent a tile
+class Tile {
+  constructor(x = 0, y = 0, color = 'white') {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+  }
+}
+
+// Base class for collidable entities
+class CollidableEntity {
+  constructor(id = 0, midpoint = [0, 0], size = 0, defense = 0, attack = 0, color = 'white') {
+    this.id = id;
+    this.midpoint = midpoint;
+    this.size = size;
+    this.defense = defense;
+    this.attack = attack;
+    this.collidingEntities = []; // Array to store IDs of colliding entities
+    this.color = color;
+  }
+}
+
+// Class for troops, extending CollidableEntity
+class Troop extends CollidableEntity {
+  constructor(id = 0, midpoint = [0, 0], size = 0, defense = 0, attack = 0, color = 'white', movement = 0, attackDistance = 0, cost = 0, foodCost = 0) {
+    super(id, midpoint, size, defense, attack, color);
+    this.movement = movement;
+    this.attackDistance = attackDistance;
+    this.cost = cost;
+    this.foodCost = foodCost;
+  }
+}
+
+// Class for buildings, extending CollidableEntity
+class Building extends CollidableEntity {
+  constructor(id = 0, midpoint = [0, 0], size = 0, defense = 0, attack = 0, color = 'white', cost = 0, food = 0, coins = 0) {
+    super(id, midpoint, size, defense, attack, color);
+    this.cost = cost;
+    this.food = food;
+    this.coins = coins;
+  }
+}
+
+// Class for cities, extending CollidableEntity
+class City extends CollidableEntity {
+  constructor(id = 0, midpoint = [0, 0], size = 0, defense = 0, attack = 0, color = 'white', coins = 0) {
+    super(id, midpoint, size, defense, attack, color);
+    this.coins = coins;
+    this.troops = [];
+    this.buildings = [];
+  }
+}
+
+// Structure to represent player state
+class PlayerState {
+  constructor(socket = null, phase = 0, coins = 0) {
+    this.socket = socket;
+    this.phase = phase;
+    this.coins = coins;
+    this.cities = [new City(), new City()];
+    this.selectedTroop = null; // Change to null
+  }
+}
+
+// Global Game State
+class GameState {
+  constructor() {
+    this.playerStates = new Map();
+    this.board = []; // 2D board representing tile colors
+    this.changedTiles = []; // List of changed tiles
+    this.lastUpdate = Date.now();
+  }
+}
+
+// Initialize the game state
+const gameState = new GameState();
 const canvas = document.getElementById('gameCanvas');
 const context = canvas.getContext('2d');
 const tileSize = 2; // Update the tileSize to match server
@@ -7,11 +83,6 @@ let selectedTroop = null;
 var jsonStuff = '{"player":{"coins":0,"troops":0}}';
 
 var obj = JSON.parse(jsonStuff);
-
-var PlayerState = {
-  coins: 0,
-  cities: []
-};
 
 const fullscrBtn = document.getElementById('fullscreenBtn');
 
@@ -138,6 +209,30 @@ function handleServerMessage(event) {
   updateList();
 }
 
+// Function to update the local game state based on server data
+function updateLocalGameState(data) {
+  const playerData = data.player;
+  if (!playerData) return;
+
+  const playerState = new PlayerState();
+  playerState.coins = playerData.coins;
+
+  playerData.cities.forEach(cityData => {
+    const city = new City(cityData.id, cityData.midpoint, cityData.size, cityData.defense, cityData.attack, cityData.color, cityData.coins);
+    cityData.troops.forEach(troopData => {
+      const troop = new Troop(troopData.id, troopData.midpoint, troopData.size, troopData.defense, troopData.attack, troopData.color, troopData.movement, troopData.attackDistance, troopData.cost, troopData.foodCost);
+      city.troops.push(troop);
+    });
+    cityData.buildings.forEach(buildingData => {
+      const building = new Building(buildingData.id, buildingData.midpoint, buildingData.size, buildingData.defense, buildingData.attack, buildingData.color, buildingData.cost, buildingData.food, buildingData.coins);
+      city.buildings.push(building);
+    });
+    playerState.cities.push(city);
+  });
+
+  gameState.playerStates.set(playerState.socket, playerState);
+}
+
 //Popup functionality
 function showPopup() {
   const popup = document.getElementById('popup');
@@ -176,4 +271,3 @@ function initializeGameMatrix() {
 
 // Call this function to start the game
 initializeGameMatrix();
-
