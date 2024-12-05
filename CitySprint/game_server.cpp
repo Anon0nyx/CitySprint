@@ -39,6 +39,7 @@
 
 #include "utilities.h"
 #include "logger.h"
+#include "quadTree.h"
 
 // Setting up our constants, function prototypes, and structures below 
 
@@ -99,6 +100,7 @@ struct GameState {
   std::vector<Tile> changedTiles; // List of changed tiles
   std::mutex stateMutex;
   std::chrono::time_point<std::chrono::steady_clock> lastUpdate; // Add this line
+  QuadTree<CollidableEntity> quadTree;
 };
 
 class ThreadPool {
@@ -308,6 +310,8 @@ void initializeGameState()
       gameState.changedTiles.push_back(tile);
     }
   }
+  gameState.quadTree = createQuadTree<CollidableEntity>(BOARD_WIDTH, BOARD_HEIGHT, 8);
+
   log("Game state initialized with " + std::to_string(rows) + " rows and " + std::to_string(cols) + " columns.");
 }
 
