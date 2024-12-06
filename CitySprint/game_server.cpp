@@ -396,7 +396,7 @@ int changeGridPoint(int x, int y, const std::string color)
 }
 
 // Functionality to insert a character using the bresenham's circle generation algorithm
-int insertCharacter(std::vector<int> coords, int radius, const std::string color, int ignoreId = -1) 
+int insertCharacter(std::vector<int> coords, int radius, const std::string color, int ignoreId = -1)
 {
   int centerX = coords[0];
   int centerY = coords[1];
@@ -428,12 +428,26 @@ int insertCharacter(std::vector<int> coords, int radius, const std::string color
     if (d > 0) {
       --y;
       d = d + 4 * (x - y) + 10;
-    } else {
+    }
+    else {
       d = d + 4 * x + 6;
     }
   }
+
+  // Insert the entity into the QuadTree
+  CollidableEntity entity;
+  entity.id = ignoreId;
+  entity.midpoint = coords;
+  entity.size = radius;
+  entity.color = color;
+  {
+    std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+    gameState.quadTree.insertEntity(&entity);
+  }
+
   return 1;
 }
+
 
 int updateEntityMidpoint(SOCKET playerSocket, const std::vector<int>& oldMidpoint, const std::vector<int>& newMidpoint) 
 {
@@ -470,8 +484,7 @@ int updateEntityMidpoint(SOCKET playerSocket, const std::vector<int>& oldMidpoin
 }
 
 
-void removeEntityFromGameState(GameState& gameState, PlayerState& playerState, int entityId)
-{
+void removeEntityFromGameState(GameState& gameState, PlayerState& playerState, int entityId) {
   log("Attempting to remove entity with ID: " + std::to_string(entityId));
 
   for (auto& city : playerState.cities) {
@@ -482,12 +495,26 @@ void removeEntityFromGameState(GameState& gameState, PlayerState& playerState, i
       std::vector<int> midpoint = city.midpoint;
       insertCharacter(midpoint, city.size, backgroundColor, entityId);
 
+      // Remove the city from the QuadTree
+      {
+        std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+        gameState.quadTree.removeEntity(&city);
+      }
+
       // Clear the city's troops and buildings
       for (auto& troop : city.troops) {
         insertCharacter(troop.midpoint, troop.size, backgroundColor, troop.id);
+        {
+          std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+          gameState.quadTree.removeEntity(&troop);
+        }
       }
       for (auto& building : city.buildings) {
         insertCharacter(building.midpoint, building.size, backgroundColor, building.id);
+        {
+          std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+          gameState.quadTree.removeEntity(&building);
+        }
       }
       city.troops.clear();
       city.buildings.clear();
@@ -511,6 +538,12 @@ void removeEntityFromGameState(GameState& gameState, PlayerState& playerState, i
       std::vector<int> midpoint = troopIt->midpoint;
       insertCharacter(midpoint, troopIt->size, backgroundColor, entityId);
 
+      // Remove the troop from the QuadTree
+      {
+        std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+        gameState.quadTree.removeEntity(&(*troopIt));
+      }
+
       // Remove the troop from the city's troop list
       city.troops.erase(troopIt);
 
@@ -519,19 +552,25 @@ void removeEntityFromGameState(GameState& gameState, PlayerState& playerState, i
       return;
     }
 
-    auto buildingIt = std::find_if(city.buildings.begin(), city.buildings.end(), [entityId](const Building& building) {
+    auto building = std::find_if(city.buildings.begin(), city.buildings.end(), [entityId](const Building& building) {
       return building.id == entityId;
       });
 
-    if (buildingIt != city.buildings.end()) {
+    if (building != city.buildings.end()) {
       log("Building found. Removing building from the game state.");
 
       // Clear the board of the building using its midpoint
-      std::vector<int> midpoint = buildingIt->midpoint;
-      insertCharacter(midpoint, buildingIt->size, backgroundColor, entityId);
+      std::vector<int> midpoint = building->midpoint;
+      insertCharacter(midpoint, building->size, backgroundColor, building->id);
+
+      // Remove the building from the QuadTree
+      {
+        std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+        gameState.quadTree.removeEntity(&(*building));
+      }
 
       // Remove the building from the city's building list
-      city.buildings.erase(buildingIt);
+      city.buildings.erase(building);
 
       log("Building " + std::to_string(entityId) + " removed from game state.");
       update_game_state(gameState); // Update game state after removal
@@ -541,6 +580,7 @@ void removeEntityFromGameState(GameState& gameState, PlayerState& playerState, i
 
   log("Entity with ID " + std::to_string(entityId) + " not found in any city.");
 }
+
 
 
 void handleTroopCollisions() 
@@ -562,8 +602,7 @@ void handleTroopCollisions()
   }
 }
 
-void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entity)
-{
+void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entity) {
   PlayerState* ourPlayer;
   {
     std::scoped_lock<std::mutex> lock(gameState.stateMutex);
@@ -571,101 +610,69 @@ void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entit
   }
 
   log("Our player: " + std::to_string(ourPlayer->socket));
- 
+
   log("Applying damage for moving entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ")");
 
-  for (auto& playerPair : gameState.playerStates) {
-    PlayerState& player = playerPair.second;
-    log("Testing against player: " + std::to_string(playerPair.first));
-    if (playerPair.first == playerSocket) {
-      log("Skipping our own player.");
-      continue;
-    }
-    for (auto& city : player.cities) {
-      log("Testing against city: " + std::to_string(city.id) + " with size: " + std::to_string(city.size));
-      log("Entity size: " + std::to_string(entity->size) + " Health: " + std::to_string(entity->defense));
-      int newRadius = entity->size + city.size + 4;
-      if (isWithinRadius(city.midpoint, entity->midpoint, newRadius)) {
-        int cityDamage = entity->attack;
-        int movingEntityDamage = city.attack;
-        city.defense -= cityDamage; // Perform damage to city
-        entity->defense -= movingEntityDamage; // Perform damage to our entity
-        entity->collidingEntities.push_back(city.id);
-        city.collidingEntities.push_back(entity->id);
-        log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(cityDamage) + " damage to City " + std::to_string(city.id) + " (Client: " + std::to_string(playerPair.first) + "). City defense: " + std::to_string(city.defense));
-        log("City " + std::to_string(city.id) + " (Client: " + std::to_string(playerPair.first) + ") dealt " + std::to_string(movingEntityDamage) + " damage to Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + "). Entity defense: " + std::to_string(entity->defense));
+  std::vector<CollidableEntity*> potentialCollisions;
+  {
+    std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+    potentialCollisions = gameState.quadTree.queryRange(entity->midpoint[0], entity->midpoint[1], entity->size);
+  }
 
-        if (city.defense <= 0) {
-          log("City " + std::to_string(city.id) + " (Client: " + std::to_string(playerPair.first) + ") has been destroyed.");
-          removeEntityFromGameState(gameState, player, city.id);
+  for (auto& otherEntity : potentialCollisions) {
+    if (otherEntity->id == entity->id) continue; // Skip self
+
+    int newRadius = entity->size + otherEntity->size + 4;
+    if (isWithinRadius(otherEntity->midpoint, entity->midpoint, newRadius)) {
+      int otherEntityDamage = entity->attack;
+      int movingEntityDamage = otherEntity->attack;
+      otherEntity->defense -= otherEntityDamage; // Perform damage to other entity
+      entity->defense -= movingEntityDamage; // Perform damage to our entity
+      entity->collidingEntities.push_back(otherEntity->id);
+      otherEntity->collidingEntities.push_back(entity->id);
+      log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(otherEntityDamage) + " damage to Entity " + std::to_string(otherEntity->id) + ". Other entity defense: " + std::to_string(otherEntity->defense));
+      log("Entity " + std::to_string(otherEntity->id) + " dealt " + std::to_string(movingEntityDamage) + " damage to Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + "). Entity defense: " + std::to_string(entity->defense));
+
+      if (otherEntity->defense <= 0) {
+        log("Entity " + std::to_string(otherEntity->id) + " has been destroyed.");
+        
+        // Find the player that owns the other entity
+        PlayerState* ownerPlayer = nullptr;
+        for (auto& playerPair : gameState.playerStates) {
+          PlayerState& player = playerPair.second;
+          for (auto& city : player.cities) {
+            if (city.id == otherEntity->id) {
+              ownerPlayer = &player;
+              break;
+            }
+            for (auto& troop : city.troops) {
+              if (troop.id == otherEntity->id) {
+                ownerPlayer = &player;
+                break;
+              }
+            }
+            for (auto& building : city.buildings) {
+              if (building.id == otherEntity->id) {
+                ownerPlayer = &player;
+                break;
+              }
+            }
+            if (ownerPlayer) break;
+          }
+          if (ownerPlayer) break;
         }
 
-        if (entity->defense <= 0) {
-          log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") has been destroyed.");
-          removeEntityFromGameState(gameState, *ourPlayer, entity->id);
-          return;
-        }
-      }
-      for (auto& troop : city.troops) {
-        log("Testing against troop: " + std::to_string(troop.midpoint[0]) + ", " + std::to_string(troop.midpoint[1]) + " : " + std::to_string(entity->midpoint[0]) + ", " + std::to_string(entity->midpoint[1]));
-        std::vector<int> circleOne, circleTwo;
-        int newRadius = (troop.size + entity->size) + 4;
-        log(std::to_string(isWithinRadius(troop.midpoint, entity->midpoint, newRadius)));
-        if (isWithinRadius(troop.midpoint, entity->midpoint, newRadius)) {
-          log("Troops are officially fighting");
-          int troopDamage = entity->attack;
-          int movingEntityDamage = troop.attack;
-          troop.defense -= troopDamage; // Perform damage to troop
-          entity->defense -= movingEntityDamage; // Perform damage to our entity
-          entity->collidingEntities.push_back(troop.id);
-          troop.collidingEntities.push_back(entity->id);
-          log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(troopDamage) + " damage to Troop " + std::to_string(troop.id) + " (Client: " + std::to_string(playerPair.first) + "). Troop defense: " + std::to_string(troop.defense));
-          log("Troop " + std::to_string(troop.id) + " (Client: " + std::to_string(playerPair.first) + ") dealt " + std::to_string(movingEntityDamage) + " damage to Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + "). Entity defense: " + std::to_string(entity->defense));
-
-          // Remove troop if its defense is zero or less
-          if (troop.defense <= 0) {
-            log("Troop " + std::to_string(troop.id) + " (Client: " + std::to_string(playerPair.first) + ") has been destroyed.");
-            insertCharacter(troop.midpoint, troop.size, backgroundColor, troop.id); // Overwrite the spot on the board
-            city.troops.erase(std::remove_if(city.troops.begin(), city.troops.end(), [&](const Troop& t) { return t.id == troop.id; }), city.troops.end());
-          }
-
-          if (entity->defense <= 0) {
-            log("Our troop is dead");
-            removeEntityFromGameState(gameState, *ourPlayer, entity->id);
-            update_game_state(gameState); // Update game state after removal
-            return;
-          }
+        if (ownerPlayer) {
+          removeEntityFromGameState(gameState, *ownerPlayer, otherEntity->id);
+        } else {
+          log("Owner player not found for entity " + std::to_string(otherEntity->id));
         }
       }
-      for (auto& building : city.buildings) {
-        std::vector<int> circleOne, circleTwo;
-        int newRadius = (building.size + entity->size) + 4;
-        log(std::to_string(isWithinRadius(building.midpoint, entity->midpoint, newRadius)));
-        if (isWithinRadius(building.midpoint, entity->midpoint, newRadius)) {
-          log("building is officially fighting");
-          int buildingDamage = entity->attack;
-          int movingEntityDamage = building.attack;
-          building.defense -= buildingDamage; // Perform damage to building
-          entity->defense -= movingEntityDamage; // Perform damage to our entity
-          entity->collidingEntities.push_back(building.id);
-          building.collidingEntities.push_back(entity->id);
-          log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") dealt " + std::to_string(movingEntityDamage) + " damage to Troop " + std::to_string(building.id) + " (Client: " + std::to_string(playerPair.first) + "). Building defense: " + std::to_string(building.defense));
-          log("Building " + std::to_string(building.id) + " (Client: " + std::to_string(playerPair.first) + ") dealt " + std::to_string(buildingDamage) + " damage to Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + "). Entity defense: " + std::to_string(entity->defense));
 
-          // Remove troop if its defense is zero or less
-          if (building.defense <= 0) {
-            log("Building " + std::to_string(building.id) + " (Client: " + std::to_string(playerPair.first) + ") has been destroyed.");
-            insertCharacter(building.midpoint, building.size, backgroundColor, building.id); // Overwrite the spot on the board
-            city.buildings.erase(std::remove_if(city.buildings.begin(), city.buildings.end(), [&](const Building& t) { return t.id == building.id; }), city.buildings.end());
-          }
-
-          if (entity->defense <= 0) {
-            log("Our troop is dead");
-            removeEntityFromGameState(gameState, *ourPlayer, entity->id);
-            update_game_state(gameState); // Update game state after removal
-            return;
-          }
-        }
+      if (entity->defense <= 0) {
+        log("Entity " + std::to_string(entity->id) + " (Client: " + std::to_string(playerSocket) + ") has been destroyed.");
+        removeEntityFromGameState(gameState, *ourPlayer, entity->id);
+        return;
       }
     }
   }
@@ -682,8 +689,6 @@ void applyDamageToCollidingEntities(SOCKET playerSocket, CollidableEntity* entit
   }
   update_game_state(gameState); // Update game state after applying damage
 }
-
-
 
 
 
@@ -824,8 +829,7 @@ int checkCollision(const std::vector<int>& circleOne, int ignoreId = -1)
 }
 
 // Character movement functionality below 
-bool moveCharacter(SOCKET playerSocket, CollidableEntity* entityToMove, const std::vector<int>& newCoords) 
-{
+bool moveCharacter(SOCKET playerSocket, CollidableEntity* entityToMove, const std::vector<int>& newCoords) {
   if (!entityToMove || entityToMove->midpoint.size() < 2) {
     log("Invalid entity to move.");
     return false;
@@ -860,6 +864,13 @@ bool moveCharacter(SOCKET playerSocket, CollidableEntity* entityToMove, const st
   // Update the entity's midpoint in the local entity object
   entityToMove->midpoint = newCoords;
 
+  // Update the entity in the QuadTree
+  {
+    std::scoped_lock<std::mutex> lock(gameState.stateMutex);
+    gameState.quadTree.removeEntity(entityToMove);
+    gameState.quadTree.insertEntity(entityToMove);
+  }
+
   // Add the changed tiles to the changedTiles vector
   {
     std::scoped_lock<std::mutex> lock(gameState.stateMutex);
@@ -871,6 +882,7 @@ bool moveCharacter(SOCKET playerSocket, CollidableEntity* entityToMove, const st
 
   return true;
 }
+
 
 void moveTroopToPosition(SOCKET playerSocket, std::shared_ptr<Troop> troop, const std::vector<int>& targetCoords)
 {
