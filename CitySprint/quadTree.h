@@ -35,6 +35,6 @@ void removeEntity(QuadTree<EntityType>& quadTree, EntityType* entity);
 template <typename EntityType>
 std::vector<EntityType*> queryRange(const QuadTree<EntityType>& quadTree, int x, int y, int range);
 
-#include "quadTreeImplementation.h"
+#include "QuadTreeImplementation.h"
 
 #endif // QUAD_TREE_H

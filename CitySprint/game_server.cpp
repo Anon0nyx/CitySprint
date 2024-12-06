@@ -37,9 +37,10 @@
 #include <vector>
 #include <algorithm>
 
-#include "utilities.h"
-#include "logger.h"
-#include "quadTree.h"
+#include "Utilities.h"
+#include "Logger.h"
+#include "ThreadingUtilities.h"
+#include "QuadTree.h"
 
 // Setting up our constants, function prototypes, and structures below 
 
@@ -101,95 +102,6 @@ struct GameState {
   std::mutex stateMutex;
   std::chrono::time_point<std::chrono::steady_clock> lastUpdate; // Add this line
   QuadTree<CollidableEntity> quadTree;
-};
-
-class ThreadPool {
-public:
-  ThreadPool(size_t numThreads);
-  ~ThreadPool();
-
-  void enqueue(std::function<void()> task, int priority = 0);
-
-private:
-  struct Task {
-    int priority;
-    std::function<void()> func;
-
-    bool operator<(const Task& other) const {
-      return priority > other.priority; // Higher priority tasks have lower values
-    }
-  };
-
-  std::vector<std::thread> workers;
-  std::priority_queue<Task> tasks;
-
-  std::mutex queueMutex;
-  std::condition_variable condition;
-  bool stop;
-};
-
-ThreadPool::ThreadPool(size_t numThreads) : stop(false)
-{
-  std::cout << "Initializing Thread Pool with: " << std::to_string(numThreads) << " Worker Threads." << std::endl;
-  for (size_t i = 0; i < numThreads; ++i) {
-    workers.emplace_back([this] {
-      for (;;) {
-        Task task;
-
-        {
-          std::unique_lock<std::mutex> lock(this->queueMutex);
-          this->condition.wait(lock, [this] { return this->stop || !this->tasks.empty(); });
-          if (this->stop && this->tasks.empty()) return;
-          task = std::move(this->tasks.top());
-          this->tasks.pop();
-        }
-
-        task.func();
-      }
-      });
-  }
-}
-
-ThreadPool::~ThreadPool()
-{
-  {
-    std::unique_lock<std::mutex> lock(queueMutex);
-    stop = true;
-  }
-  condition.notify_all();
-  for (std::thread& worker : workers) worker.join();
-}
-
-void ThreadPool::enqueue(std::function<void()> task, int priority)
-{
-  {
-    std::unique_lock<std::mutex> lock(queueMutex);
-    tasks.push({ priority, std::move(task) });
-  }
-  condition.notify_one();
-}
-
-
-class Semaphore {
-public:
-    Semaphore(int count = 0) : count(count) {}
-
-    void acquire() {
-        std::unique_lock<std::mutex> lock(semaphoreMutex);
-        condition.wait(lock, [this] { return count > 0; });
-        --count;
-    }
-
-    void release() {
-        std::unique_lock<std::mutex> lock(semaphoreMutex);
-        ++count;
-        condition.notify_one();
-    }
-
-private:
-    std::mutex semaphoreMutex;
-    std::condition_variable condition;
-    int count;
 };
 
 void update_player_state(GameState& game_state, SOCKET socket, const PlayerState& state);

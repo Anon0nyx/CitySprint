@@ -209,29 +209,6 @@ function handleServerMessage(event) {
   updateList();
 }
 
-// Function to update the local game state based on server data
-function updateLocalGameState(data) {
-  const playerData = data.player;
-  if (!playerData) return;
-
-  const playerState = new PlayerState();
-  playerState.coins = playerData.coins;
-
-  playerData.cities.forEach(cityData => {
-    const city = new City(cityData.id, cityData.midpoint, cityData.size, cityData.defense, cityData.attack, cityData.color, cityData.coins);
-    cityData.troops.forEach(troopData => {
-      const troop = new Troop(troopData.id, troopData.midpoint, troopData.size, troopData.defense, troopData.attack, troopData.color, troopData.movement, troopData.attackDistance, troopData.cost, troopData.foodCost);
-      city.troops.push(troop);
-    });
-    cityData.buildings.forEach(buildingData => {
-      const building = new Building(buildingData.id, buildingData.midpoint, buildingData.size, buildingData.defense, buildingData.attack, buildingData.color, buildingData.cost, buildingData.food, buildingData.coins);
-      city.buildings.push(building);
-    });
-    playerState.cities.push(city);
-  });
-
-  gameState.playerStates.set(playerState.socket, playerState);
-}
 
 //Popup functionality
 function showPopup() {
@@ -244,6 +221,7 @@ function closePopup() {
 }
 
 const list = document.getElementById('dynamic-list');
+//status functionality
 //status functionality
 function updateList(character) {
   if (obj.player == null) return;
@@ -258,8 +236,17 @@ function updateList(character) {
   const selectedItem = document.createElement('li')
   selectedItem.textContent = "CURRENT: " + items[1];
   list.appendChild(selectedItem);
+
+  // Display health of selected troop if any
+  if (selectedTroop) {
+    const healthItem = document.createElement('li');
+    healthItem.textContent = "HEALTH: " + selectedTroop.defense;
+    list.appendChild(healthItem);
+  }
+
   return;
 }
+updateList();
 updateList();
 
 // Initial setup to clear the canvas and fill with an initial color if needed
@@ -269,5 +256,68 @@ function initializeGameMatrix() {
   context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+// Function to draw a troop with its health value
+function drawTroop(troop) {
+  const [x, y] = troop.midpoint;
+  const radius = troop.size / 2;
+
+  // Draw the troop as a circle
+  context.beginPath();
+  context.arc(x, y, radius, 0, 2 * Math.PI, false);
+  context.fillStyle = troop.color;
+  context.fill();
+  context.lineWidth = 1;
+  context.strokeStyle = '#003300';
+  context.stroke();
+
+  // Draw the health value inside the circle
+  context.fillStyle = 'black';
+  context.font = '12px Arial';
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(troop.health, x, y);
+}
+
+// Function to update the local game state based on server data
+function updateLocalGameState(data) {
+  const playerData = data.player;
+  if (!playerData) return;
+
+  const playerState = new PlayerState();
+  playerState.coins = playerData.coins;
+
+  playerData.cities.forEach(cityData => {
+    const city = new City(cityData.id, cityData.midpoint, cityData.size, cityData.defense, cityData.attack, cityData.color, cityData.coins);
+    cityData.troops.forEach(troopData => {
+      const troop = new Troop(troopData.id, troopData.midpoint, troopData.size, troopData.defense, troopData.attack, troopData.color, troopData.movement, troopData.attackDistance, troopData.cost, troopData.foodCost);
+      troop.health = troopData.health; // Set health for troop
+      city.troops.push(troop);
+    });
+    cityData.buildings.forEach(buildingData => {
+      const building = new Building(buildingData.id, buildingData.midpoint, buildingData.size, buildingData.defense, buildingData.attack, buildingData.color, buildingData.cost, buildingData.food, buildingData.coins);
+      building.health = buildingData.health; // Set health for building
+      city.buildings.push(building);
+    });
+    playerState.cities.push(city);
+  });
+
+  gameState.playerStates.set(playerState.socket, playerState);
+}
+
+// Function to draw the game state
+function drawGameState() {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  gameState.playerStates.forEach(playerState => {
+    playerState.cities.forEach(city => {
+      city.troops.forEach(troop => {
+        drawTroop(troop);
+      });
+    });
+  });
+}
+
 // Call this function to start the game
 initializeGameMatrix();
+drawGameState();
+

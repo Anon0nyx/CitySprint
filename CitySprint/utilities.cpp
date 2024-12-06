@@ -1,5 +1,5 @@
-#include "utilities.h"
-#include "logger.h"
+#include "Utilities.h"
+#include "Logger.h"
 #include <iostream>
 #include <string>
 #include <openssl/sha.h>

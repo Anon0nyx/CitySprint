@@ -1,7 +1,7 @@
 #ifndef QUAD_TREE_IMPL_H
 #define QUAD_TREE_IMPL_H
 
-#include "quadTree.h"
+#include "QuadTree.h"
 
 template <typename EntityType>
 QuadTree<EntityType> createQuadTree(int width, int height, int maxDepth) {
