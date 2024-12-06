@@ -65,7 +65,7 @@ class PlayerState {
 // Global Game State
 class GameState {
   constructor() {
-    this.playerStates = new Map();
+    this.playerState = new PlayerState();
     this.board = []; // 2D board representing tile colors
     this.changedTiles = []; // List of changed tiles
     this.lastUpdate = Date.now();
@@ -248,6 +248,9 @@ const list = document.getElementById('dynamic-list');
 function updateList(character) {
   if (obj.player == null) return;
   const items = [obj.player.coins, character];
+
+  gameState.playerState.coins = obj.player.coins;
+  console.log(gameState.playerState.coins);
 
   list.innerHTML = ''; // clear list
 
