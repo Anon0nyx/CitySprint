@@ -102,6 +102,7 @@ struct GameState {
   std::mutex stateMutex;
   std::chrono::time_point<std::chrono::steady_clock> lastUpdate; // Add this line
   QuadTree<CollidableEntity> quadTree;
+  GameState() : quadTree(BOARD_WIDTH, BOARD_HEIGHT, 5) {}
 };
 
 void update_player_state(GameState& game_state, SOCKET socket, const PlayerState& state);
@@ -222,7 +223,6 @@ void initializeGameState()
       gameState.changedTiles.push_back(tile);
     }
   }
-  gameState.quadTree = createQuadTree<CollidableEntity>(BOARD_WIDTH, BOARD_HEIGHT, 8);
 
   log("Game state initialized with " + std::to_string(rows) + " rows and " + std::to_string(cols) + " columns.");
 }

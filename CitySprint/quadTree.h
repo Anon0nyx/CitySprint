@@ -6,35 +6,36 @@
 #include <memory>
 
 template <typename EntityType>
-struct QuadTreeNode {
+class QuadTreeNode {
+public:
+  QuadTreeNode(int x, int y, int size);
+  bool isLeaf() const;
+  void insert(EntityType* entity, int depth, int maxDepth);
+  void remove(EntityType* entity);
+  void queryRange(int x, int y, int range, std::vector<EntityType*>& result) const;
+
+private:
+  void subdivide();
+  bool intersects(int x, int y, int range) const;
+
   int x, y, size;
   std::vector<EntityType*> entities;
   std::unique_ptr<QuadTreeNode<EntityType>> children[4];
-
-  QuadTreeNode(int x, int y, int size) : x(x), y(y), size(size) {}
-  bool isLeaf() const {
-    return children[0] == nullptr;
-  }
 };
 
 template <typename EntityType>
-struct QuadTree {
+class QuadTree {
+public:
+  QuadTree(int width, int height, int maxDepth);
+  void insertEntity(EntityType* entity);
+  void removeEntity(EntityType* entity);
+  std::vector<EntityType*> queryRange(int x, int y, int range) const;
+
+private:
   std::unique_ptr<QuadTreeNode<EntityType>> root;
   int maxDepth;
 };
 
-template <typename EntityType>
-QuadTree<EntityType> createQuadTree(int width, int height, int maxDepth);
-
-template <typename EntityType>
-void insertEntity(QuadTree<EntityType>& quadTree, EntityType* entity);
-
-template <typename EntityType>
-void removeEntity(QuadTree<EntityType>& quadTree, EntityType* entity);
-
-template <typename EntityType>
-std::vector<EntityType*> queryRange(const QuadTree<EntityType>& quadTree, int x, int y, int range);
-
-#include "QuadTreeImplementation.h"
+#include "quadTreeImplementation.h"
 
 #endif // QUAD_TREE_H
