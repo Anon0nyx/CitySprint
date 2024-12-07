@@ -40,6 +40,7 @@ typedef int socklen_t;
 #include "Utilities.h"
 #include "Logger.h"
 #include "ThreadingUtilities.h"
+#include "QuadTreeOO.h"
 
 // Setting up our constants, function prototypes, and structures below 
 
@@ -149,6 +150,8 @@ size_t leftoverThreadCount = clientMessageCount / 2;
 ThreadPool clientMessageThreadPool(clientMessageCount);
 ThreadPool subtaskThreadPool(clientSubtaskCount);
 ThreadPool surplusThreadsForClients(leftoverThreadCount / 2);
+
+QuadTree<CollidableEntity> quadTree(BOARD_WIDTH, BOARD_HEIGHT, 8);
 
 void update_player_state(GameState& game_state, SOCKET socket, const PlayerState& state)
 {
@@ -1072,6 +1075,7 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
     }
     if (nearestCity) {
       nearestCity->troops.push_back(newTroop);
+      quadTree.insertEntity(&newTroop);
     }
   }
   else if (buildingMap.find(characterType) != buildingMap.end()) {

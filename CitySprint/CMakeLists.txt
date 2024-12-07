@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # Create our executable
-add_executable(CitySprint "game_server.cpp" "Logger.cpp" "Utilities.cpp" "ThreadingUtilities.cpp" "QuadTree.h" "QuadTreeImplementation.h")
+add_executable(CitySprint "game_server.cpp" "Logger.cpp" "Utilities.cpp" "ThreadingUtilities.cpp" "QuadTreeOO.h" "QuadTreeOOImplementation.h")
 
 if (WIN32)
     set(CMAKE_SYSTEM_NAME Windows)
