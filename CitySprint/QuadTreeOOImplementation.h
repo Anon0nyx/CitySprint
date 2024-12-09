@@ -12,23 +12,6 @@ bool QuadTreeNode<EntityType>::isLeaf() const {
 }
 
 template <typename EntityType>
-void QuadTreeNode<EntityType>::insert(EntityType* entity, int depth, int maxDepth) {
-  if (isLeaf()) {
-    if (entities.size() < 4 || depth == maxDepth) {
-      entities.push_back(entity);
-    } else {
-      subdivide();
-      insert(entity, depth, maxDepth);
-    }
-  } else {
-    int midX = x + size / 2;
-    int midY = y + size / 2;
-    int index = (entity->midpoint[0] > midX) + 2 * (entity->midpoint[1] > midY);
-    children[index]->insert(entity, depth + 1, maxDepth);
-  }
-}
-
-template <typename EntityType>
 void QuadTreeNode<EntityType>::remove(EntityType* entity) {
   if (isLeaf()) {
     auto it = std::find(entities.begin(), entities.end(), entity);
@@ -64,20 +47,56 @@ void QuadTreeNode<EntityType>::queryRange(int x, int y, int range, std::vector<E
 
 template <typename EntityType>
 void QuadTreeNode<EntityType>::subdivide() {
-  std::cout << "Subdiving Nodes" << std::endl;
+  std::cout << "Subdividing Nodes at (" << x << ", " << y << ") with size " << size << std::endl;
   int halfSize = size / 2;
   children[0] = std::make_unique<QuadTreeNode<EntityType>>(x, y, halfSize);
   children[1] = std::make_unique<QuadTreeNode<EntityType>>(x + halfSize, y, halfSize);
   children[2] = std::make_unique<QuadTreeNode<EntityType>>(x, y + halfSize, halfSize);
   children[3] = std::make_unique<QuadTreeNode<EntityType>>(x + halfSize, y + halfSize, halfSize);
 
+  // Distribute existing entities to children
   for (auto& entity : entities) {
-    int midX = x + halfSize;
-    int midY = y + halfSize;
-    int index = (entity->midpoint[0] > midX) + 2 * (entity->midpoint[1] > midY);
-    children[index]->entities.push_back(std::move(entity));
+    if (entity != nullptr) {
+      int midX = x + halfSize;
+      int midY = y + halfSize;
+      int index = (entity->midpoint[0] >= midX) + 2 * (entity->midpoint[1] >= midY);
+      std::cout << "Moving entity with midpoint (" << entity->midpoint[0] << ", " << entity->midpoint[1] << ") to child " << index << std::endl;
+      children[index]->insert(entity, 1, 0); // Insert into the appropriate child
+    }
   }
   entities.clear();
+}
+
+template <typename EntityType>
+void QuadTreeNode<EntityType>::insert(EntityType* entity, int depth, int maxDepth) {
+  std::cout << "Inserting entity at depth " << depth << " with midpoint (" << entity->midpoint[0] << ", " << entity->midpoint[1] << ") into node at (" << x << ", " << y << ")" << std::endl;
+  if (isLeaf()) {
+    if (entities.size() < 4 || depth == maxDepth) {
+      entities.push_back(entity);
+    }
+    else {
+      subdivide();
+      // Re-insert entities into the appropriate children
+      for (auto& e : entities) {
+        int midX = x + size / 2;
+        int midY = y + size / 2;
+        int index = (e->midpoint[0] >= midX) + 2 * (e->midpoint[1] >= midY);
+        children[index]->insert(e, depth + 1, maxDepth);
+      }
+      entities.clear();
+      // Insert the new entity into the appropriate child
+      int midX = x + size / 2;
+      int midY = y + size / 2;
+      int index = (entity->midpoint[0] >= midX) + 2 * (entity->midpoint[1] >= midY);
+      children[index]->insert(entity, depth + 1, maxDepth);
+    }
+  }
+  else {
+    int midX = x + size / 2;
+    int midY = y + size / 2;
+    int index = (entity->midpoint[0] >= midX) + 2 * (entity->midpoint[1] >= midY);
+    children[index]->insert(entity, depth + 1, maxDepth);
+  }
 }
 
 template <typename EntityType>

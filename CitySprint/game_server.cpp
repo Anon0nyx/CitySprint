@@ -151,7 +151,13 @@ ThreadPool clientMessageThreadPool(clientMessageCount);
 ThreadPool subtaskThreadPool(clientSubtaskCount);
 ThreadPool surplusThreadsForClients(leftoverThreadCount / 2);
 
-QuadTree<CollidableEntity> quadTree(BOARD_WIDTH, BOARD_HEIGHT, 8);
+QuadTree<CollidableEntity> quadTree(BOARD_WIDTH/2, BOARD_HEIGHT/2, 4);
+std::mutex quadTreeMutex;
+
+void insertEntityIntoQuadTree(CollidableEntity* entity) {
+  std::scoped_lock<std::mutex> lock(quadTreeMutex);
+  quadTree.insertEntity(entity);
+}
 
 void update_player_state(GameState& game_state, SOCKET socket, const PlayerState& state)
 {
@@ -1075,7 +1081,7 @@ void handlePlayerMessage(SOCKET clientSocket, const std::string& message)
     }
     if (nearestCity) {
       nearestCity->troops.push_back(newTroop);
-      quadTree.insertEntity(&newTroop);
+      insertEntityIntoQuadTree(&newTroop);
     }
   }
   else if (buildingMap.find(characterType) != buildingMap.end()) {
