@@ -40,7 +40,7 @@ typedef int socklen_t;
 #include "Utilities.h"
 #include "Logger.h"
 #include "ThreadingUtilities.h"
-#include "QuadTreeOO.h"
+#include "NewQuadTree.h"
 
 // Setting up our constants, function prototypes, and structures below 
 
@@ -151,12 +151,13 @@ ThreadPool clientMessageThreadPool(clientMessageCount);
 ThreadPool subtaskThreadPool(clientSubtaskCount);
 ThreadPool surplusThreadsForClients(leftoverThreadCount / 2);
 
-QuadTree<CollidableEntity> quadTree(BOARD_WIDTH/2, BOARD_HEIGHT/2, 4);
+Quad<CollidableEntity> center(Point(0,0), Point(BOARD_WIDTH/2, BOARD_HEIGHT/2));
 std::mutex quadTreeMutex;
 
 void insertEntityIntoQuadTree(CollidableEntity* entity) {
   std::scoped_lock<std::mutex> lock(quadTreeMutex);
-  quadTree.insertEntity(entity);
+  Node<CollidableEntity> toEnter(Point(entity->midpoint[0], entity->midpoint[1]), *entity);
+  center.insert(&toEnter);
 }
 
 void update_player_state(GameState& game_state, SOCKET socket, const PlayerState& state)
